@@ -43,3 +43,5 @@ next-env.d.ts
 Thumbs.db
 # Local tooling
 .claude/
+
+.env*
