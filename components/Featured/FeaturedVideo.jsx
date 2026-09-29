@@ -23,7 +23,8 @@ export default function FeaturedVideo({ refForward, ...props }) {
         alt={`Portrait of ${PROFILE.name}`}
         fill
         priority
-        unoptimized={MEDIA.portrait.endsWith(".svg")}
+        // The source is already small; resizing it only lost sharpness.
+        unoptimized
         sizes="(max-width: 768px) 80vw, 40vw"
         className="object-cover grayscale"
       />
