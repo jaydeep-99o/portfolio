@@ -1,5 +1,9 @@
 # Jaydeep Gujar | Portfolio
 
+[![CI / Deploy to Vercel](https://github.com/jaydeep-99o/portfolio/actions/workflows/deploy.yml/badge.svg)](https://github.com/jaydeep-99o/portfolio/actions/workflows/deploy.yml)
+
+Live: https://jaydeep-gujar.vercel.app
+
 Personal portfolio for Jaydeep Gujar, a DevOps-focused engineer building, shipping and running production apps on AWS.
 
 Built with Next.js 14 (App Router), Tailwind CSS, GSAP (ScrollTrigger), Framer Motion, React Spring and Lenis smooth scroll. Light and dark themes.
@@ -31,7 +35,7 @@ Drop files into `public/` and update the `MEDIA` block in `data/site.js`:
 
 ## CI/CD
 
-[`.github/workflows/deploy.yml`](.github/workflows/deploy.yml) builds every push and pull request to `main`. Pushes to `main` then deploy to Vercel production with the Vercel CLI (`vercel pull` → `vercel build --prod` → `vercel deploy --prebuilt --prod`). Vercel's own Git deployments are disabled in [`vercel.json`](vercel.json), so GitHub Actions is the only way code reaches production.
+[`.github/workflows/deploy.yml`](.github/workflows/deploy.yml) builds every push and pull request to `main`. Pushes to `main` then deploy to Vercel production with the Vercel CLI (`vercel pull` → `vercel build --prod` → `vercel deploy --prebuilt --prod`), followed by a smoke test that the production URL returns 200. Vercel's own Git deployments are disabled in [`vercel.json`](vercel.json), so GitHub Actions is the only way code reaches production.
 
 Required repository secrets:
 

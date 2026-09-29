@@ -22,6 +22,9 @@ concurrency:
 env:
   NODE_VERSION: 24
   VERCEL_CLI_VERSION: 61
+  # Public production domain. Per-deployment URLs sit behind Vercel's login
+  # wall, so this is what the GitHub environment links to.
+  PRODUCTION_URL: https://jaydeep-gujar.vercel.app
 
 jobs:
   build:
@@ -50,7 +53,7 @@ jobs:
     timeout-minutes: 15
     environment:
       name: production
-      url: ${{ steps.deploy.outputs.url }}
+      url: ${{ env.PRODUCTION_URL }}
     env:
       VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
       VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
@@ -107,4 +110,22 @@ jobs:
         run: |
           url=$(vercel deploy --prebuilt --prod --token="$VERCEL_TOKEN")
           echo "url=$url" >> "$GITHUB_OUTPUT"
-          echo "Deployed to $url" >> "$GITHUB_STEP_SUMMARY"
+          {
+            echo "Production: $PRODUCTION_URL"
+            echo ""
+            echo "Deployment (Vercel login required): $url"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Smoke test production
+        run: |
+          for attempt in 1 2 3 4 5; do
+            status=$(curl -s -o /dev/null -w '%{http_code}' "$PRODUCTION_URL/")
+            if [ "$status" = "200" ]; then
+              echo "$PRODUCTION_URL responded 200 (attempt $attempt)"
+              exit 0
+            fi
+            echo "Attempt $attempt: HTTP $status, retrying in 5s"
+            sleep 5
+          done
+          echo "::error::$PRODUCTION_URL did not return 200 after deploy"
+          exit 1
