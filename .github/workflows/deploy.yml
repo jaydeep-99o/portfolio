@@ -52,20 +52,39 @@ jobs:
       name: production
       url: ${{ steps.deploy.outputs.url }}
     env:
-      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
       VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
       VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
     steps:
+      # Validates the secrets and exports a cleaned VERCEL_TOKEN for later
+      # steps. The raw secret stays scoped to this step.
       - name: Check Vercel secrets
+        env:
+          RAW_VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: |
           missing=""
-          for name in VERCEL_TOKEN VERCEL_ORG_ID VERCEL_PROJECT_ID; do
-            [ -z "${!name}" ] && missing="$missing $name"
+          for name in RAW_VERCEL_TOKEN VERCEL_ORG_ID VERCEL_PROJECT_ID; do
+            [ -z "${!name}" ] && missing="$missing ${name#RAW_}"
           done
           if [ -n "$missing" ]; then
             echo "::error::Missing repository secrets:$missing. Add them under Settings > Secrets and variables > Actions."
             exit 1
           fi
+
+          # Copy-paste often brings a stray space or newline, which the Vercel
+          # CLI rejects. Strip it, and mask the cleaned value since it no
+          # longer matches the registered secret exactly.
+          token=$(printf '%s' "$RAW_VERCEL_TOKEN" | tr -d '[:space:]')
+          echo "::add-mask::$token"
+          if [ "$token" != "$RAW_VERCEL_TOKEN" ]; then
+            echo "::notice::Removed whitespace from VERCEL_TOKEN. Consider re-saving the secret without it."
+          fi
+          case "$token" in
+            *-* | */*)
+              echo "::error::VERCEL_TOKEN contains '-' or '/', so it is not a Vercel access token. Create one at https://vercel.com/account/tokens and update the secret."
+              exit 1
+              ;;
+          esac
+          echo "VERCEL_TOKEN=$token" >> "$GITHUB_ENV"
 
       - uses: actions/checkout@v7
 
